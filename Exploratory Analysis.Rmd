@@ -1,0 +1,54 @@
+---
+title: "Project Exploratory Analysis"
+author: "Diamond in the Rough"
+date: "4/4/2022"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ISLR2) 
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(leaps)
+```
+
+Read in data
+```{r, include = FALSE}
+diamonds = read.csv("C:/Users/thing1/Documents/SCHOOL/4th_year/DS 301/DS301FinalProject/diamonds.csv",header=TRUE)
+head(diamonds)
+
+lapply(diamonds, function(x){levels(x)})
+length(which(is.na(diamonds$fancy_color_dominant_color)))
+levels(diamonds)
+
+boxplot(size~clarity,data = diamonds,main = "test", log="y")
+?boxplot
+hist(diamonds$total_sales_price)
+reasonablyPriced = diamonds %>% filter(total_sales_price <10000)
+expensive = diamonds %>% filter(total_sales_price >10000)
+hist(reasonablyPriced$total_sales_price)
+
+
+barplot(table(diamonds$clarity))
+
+plot(reasonablyPriced$size,reasonablyPriced$total_sales_price, )
+
+ggplot(reasonablyPriced, aes(x=size,y=total_sales_price))+geom_point(alpha=0.01)+scale_y_continuous(trans='log2')
+```
+
+```{r}
+fancy = diamonds %>% filter(fancy_color_dominant_color != "")
+
+nofancy = diamonds %>% filter(fancy_color_dominant_color =="")
+
+boxplot(total_sales_price~fancy_color_intensity,data = diamonds,main = "test", log="y")
+length(which(reasonablyPriced$fancy_color_dominant_color==""))/nrow(reasonablyPriced)
+length(which(expensive$fancy_color_dominant_color==""))/nrow(expensive)
+nrow(diamonds)
+
+```
+
