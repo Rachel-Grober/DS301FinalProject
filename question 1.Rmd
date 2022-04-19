@@ -1,0 +1,175 @@
+---
+title: "Problem 1"
+author: "Marcy Anderson"
+date: "4/18/2022"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ISLR2) 
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(leaps)
+library(glmnet)
+```
+
+```{r, include = FALSE}
+diamonds = read.csv("C:/Users/thing1/Documents/SCHOOL/4th_year/DS 301/DS301FinalProject/diamonds.csv",header=TRUE)
+
+head(diamonds)
+
+some_col = subset(diamonds,select=-c(diamond_id,date, fancy_color_dominant_color,fancy_color_secondary_color,fancy_color_overtone,fancy_color_intensity))
+head(some_col)
+## get only the diamonds under 10k
+priced_diamonds = some_col %>% filter(total_sales_price <10000)
+## perform generic model selection
+
+## Split training and Test Sets
+
+#Best subset search 
+# NOTE THIS DID NOT WORK BECAUSE TOO MANY COLUMNS #
+#bestset = regsubsets(total_sales_price~.,nvmax = 21, data=priced_diamonds, really.big=T)
+#bestset.sum = summary(bestset)
+#bestset.sum
+
+
+## BACKWARD SELECTION
+bwdset = regsubsets(total_sales_price~.,data=priced_diamonds, nvmax=98, method = "backward")
+
+bwdset.sum = summary(bwdset)
+bwdset.sum
+
+n = dim(priced_diamonds)[1]
+p = rowSums(bwdset.sum$which)
+
+brss = bwdset.sum$rss
+bAIC = n*log(brss/n)+2*(p)
+bBIC = n*log(brss/n)+(p)*log(n)
+which.min(bAIC)
+which.min(bBIC)
+which.max(bwdset.sum$adjr2)
+which.min(bwdset.sum$cp)
+coef(bwdset,71)
+
+## FORWARD SELECTION
+
+fwdset = regsubsets(total_sales_price~.,data=priced_diamonds, nvmax=98, method = "forward")
+
+fwdset.sum = summary(fwdset)
+fwdset.sum
+
+n = dim(priced_diamonds)[1]
+p = rowSums(fwdset.sum$which)
+
+frss = fwdset.sum$rss
+fAIC = n*log(frss/n)+2*(p)
+fBIC = n*log(frss/n)+(p)*log(n)
+which.min(fAIC)
+which.min(fBIC)
+which.max(fwdset.sum$adjr2)
+which.min(fwdset.sum$cp)
+coef(bwdset,67)
+
+```
+BIC MODEL FOR BACKWARD SELECTION (coef 71)
+
+               (Intercept)               shapeCushion      shapeCushion Modified               shapeEmerald                 shapeHeart 
+              -2317.099256                -324.256605                -655.511859                -119.425546                -376.739871 
+             shapeMarquise                  shapePear              shapePrincess               shapeRadiant                 shapeRound 
+                181.576668                  51.229088                -188.388487                -178.306367                 966.595415 
+                      size                     colorE                     colorF                     colorG                     colorH 
+               7395.088273                -102.437675                -143.205912                -195.815403                -318.881850 
+                    colorI                     colorJ                     colorK                     colorL                     colorM 
+               -578.311816                -925.537159               -1327.391614               -1805.166820               -2269.333035 
+                 clarityI2                  clarityI3                  clarityIF                 claritySI1                 claritySI2 
+               -849.276405               -1523.445500                1521.763660                 908.022973                 586.678073 
+                claritySI3                 clarityVS1                 clarityVS2                clarityVVS1                clarityVVS2 
+               1245.813562                1242.594333                1138.531460                1396.529360                1313.122237 
+              cutExcellent                    cutFair                    cutGood               cutVery Good               symmetryFair 
+               -637.136678               -3834.725393               -1929.521839                -667.626831                 432.494633 
+              symmetryGood          symmetryVery Good                 polishGood                 polishPoor              depth_percent 
+                448.738773                 -21.983391                 370.629059               -4448.001949                  -6.245507 
+               meas_length                 meas_width                 meas_depth                girdle_minM              girdle_minSTK 
+                -65.910151                 160.774451                   3.651147                 239.207522                 257.800296 
+              girdle_minTK               girdle_minTN              girdle_minVTK              girdle_minVTN              girdle_minXTK 
+                231.324575                 310.276987                 170.750010                 318.151647                 547.994759 
+             girdle_minXTN                girdle_maxM              girdle_maxSTK               girdle_maxTK               girdle_maxTN 
+                213.684920                -196.704934                -143.196346                -134.315549                -281.211940 
+             girdle_maxVTK               culet_sizeEL                culet_sizeN     culet_conditionPointed            fluor_colorBlue 
+               -162.323143               -4616.510293                 -73.443427                 319.352305                  65.150778 
+          fluor_colorGreen          fluor_colorOrange          fluor_colorYellow       fluor_intensityFaint      fluor_intensityMedium 
+                429.194247               -1223.084488                 515.112231                 -73.228005                -154.157794 
+     fluor_intensityStrong fluor_intensityVery Slight fluor_intensityVery Strong                     labHRD                     labIGI 
+               -262.233304                 -87.388364                -426.370471                -254.592405                -530.338228 
+       eye_cleanBorderline               eye_cleanYes 
+               -211.316315                 -83.884884 
+
+
+BIC MODEL FOR FORWARD SELECTION (coef 67)
+               (Intercept)               shapeCushion      shapeCushion Modified               shapeEmerald                 shapeHeart 
+              -2318.647123                -320.018466                -652.657764                -118.298157                -376.254650 
+             shapeMarquise                  shapePear              shapePrincess               shapeRadiant                 shapeRound 
+                182.059060                  51.172802                -185.551293                -176.007063                 969.050199 
+                      size                     colorE                     colorF                     colorG                     colorH 
+               7397.380840                -102.668968                -143.375295                -196.076210                -319.256995 
+                    colorI                     colorJ                     colorK                     colorL                     colorM 
+               -578.656216                -925.806338               -1328.060256               -1805.891992               -2269.895749 
+                 clarityI2                  clarityI3                  clarityIF                 claritySI1                 claritySI2 
+               -848.434970               -1517.501609                1521.784660                 908.138407                 586.804699 
+                claritySI3                 clarityVS1                 clarityVS2                clarityVVS1                clarityVVS2 
+               1245.195926                1242.890047                1138.931971                1396.798577                1313.379163 
+              cutExcellent                    cutFair                    cutGood               cutVery Good               symmetryFair 
+               -639.125706               -3842.675926               -1933.034829                -668.562986                 442.234692 
+              symmetryGood          symmetryVery Good                 polishGood                 polishPoor              depth_percent 
+                452.236027                 -21.787529                 374.045585               -4446.796314                  -6.214653 
+               meas_length                 meas_width                girdle_minM              girdle_minSTK               girdle_minTK 
+                -65.645521                 162.335387                 233.425483                 251.762336                 225.632203 
+              girdle_minTN              girdle_minVTK              girdle_minVTN              girdle_minXTK                girdle_maxM 
+                304.051955                 166.310853                 310.984822                 544.064656                -190.994889 
+             girdle_maxSTK               girdle_maxTK               girdle_maxTN              girdle_maxVTK               culet_sizeEL 
+               -137.553331                -129.248523                -275.754345                -157.263301               -4404.028264 
+               culet_sizeN     culet_conditionPointed            fluor_colorBlue          fluor_colorYellow       fluor_intensityFaint 
+                -72.674020                 319.243854                  64.426008                 512.335226                 -73.203887 
+     fluor_intensityMedium      fluor_intensityStrong fluor_intensityVery Slight fluor_intensityVery Strong                     labHRD 
+               -153.828705                -261.499535                 -87.426884                -425.401813                -249.069952 
+                    labIGI        eye_cleanBorderline               eye_cleanYes 
+               -530.181358                -211.461840                 -83.925064 
+
+
+```{r}
+## RIDGE
+
+train = sample(1:nrow(priced_diamonds), nrow(priced_diamonds)/2)
+test=(-train)
+train_data = priced_diamonds[train,]
+test_data = priced_diamonds[-train,]
+
+grid = 10^seq(10,-2,length=100)
+
+x = model.matrix(total_sales_price ~.,data=priced_diamonds)[,-1] #19 predictors
+Y = priced_diamonds$total_sales_price
+
+ridge.train = glmnet(x[train,],Y[train],alpha=0,lambda=grid)
+lasso.train = glmnet(x[train,],Y[train],alpha=1,lambda=grid)
+
+
+cv.out.ridge = cv.glmnet(x[train,],Y[train],alpha = 0, lambda = grid) 
+cv.out.lasso = cv.glmnet(x[train,],Y[train],alpha = 1, lambda = grid) 
+bestlambdaridge = cv.out.ridge$lambda.min
+bestlambdalasso = cv.out.lasso$lambda.min
+selambdaridge = cv.out.ridge$lambda.1se
+selambdalasso = cv.out.lasso$lambda.1se
+
+ridge.pred1 = predict(cv.out,s=bestlambdaridge,newx=x[test,])
+mean((ridge.pred1-Y[test])^2)
+lasso.pred1 = predict(cv.out,s=bestlambdalasso,newx=x[test,])
+mean((ridge.pred2-Y[test])^2)
+lasso.pred2 = predict(cv.out,s=selambdaridge,newx=x[test,])
+mean((lasso.pred1-Y[test])^2)
+ridge.pred.2 = predict(cv.out,s=selambdalasso,newx=x[test,])
+mean((lasso.pred2-Y[test])^2)
+
+```
+
+
