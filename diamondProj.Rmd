@@ -1,0 +1,69 @@
+---
+title: "diamond"
+author: "John King"
+date: "4/18/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project
+
+```{r, echo=FALSE, warning=FALSE, message='false', results='hide'}
+library(dplyr)
+diamond = read.csv('./diamonds.csv')
+diamond$clarity = as.factor(diamond$clarity)
+new.levels = c('below', 'below' , 'below', 'above', 'below', 'below', 'below', 'above', 'above', 'above', 'above')
+x <- factor(new.levels[diamond$clarity])
+diamond$claritybool = x
+
+#Convert everything to factor
+diamond$shape = as.factor(diamond$shape)
+diamond$color = as.factor(diamond$color)
+diamond$fancy_color_dominant_color = as.factor(diamond$fancy_color_dominant_color)
+diamond$fancy_color_secondary_color = as.factor(diamond$fancy_color_secondary_color)
+diamond$fancy_color_overtone = as.factor(diamond$fancy_color_overtone)
+diamond$fancy_color_intensity = as.factor(diamond$fancy_color_intensity)
+
+
+diamond$cut = as.factor(diamond$cut)
+diamond$symmetry = as.factor(diamond$symmetry)
+diamond$polish = as.factor(diamond$polish)
+
+diamond$girdle_min = as.factor(diamond$girdle_min)
+diamond$girdle_max = as.factor(diamond$girdle_max)
+diamond$culet_size = as.factor(diamond$culet_size)
+diamond$culet_condition = as.factor(diamond$culet_condition)
+diamond$fluor_color = as.factor(diamond$fluor_color)
+diamond$fluor_intensity = as.factor(diamond$fluor_intensity)
+diamond$lab = as.factor(diamond$lab)
+diamond$eye_clean = as.factor(diamond$eye_clean)
+
+#str(diamond)
+
+diamond_clean = diamond %>% dplyr::select(-c(diamond_id, clarity, date))
+
+#for convenience
+#diamond_clean = diamond_clean %>%
+#  dplyr::select(-c(fancy_color_dominant_color, fancy_color_secondary_color, #fancy_color_overtone, fancy_color_intensity))
+
+#diamond_clean = diamond_clean %>% 
+#  dplyr::select(-color)
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message='false', results='hide'}
+library(MASS)
+train_index = sample(1:nrow(diamond_clean), nrow(diamond_clean) / 2, rep=FALSE)
+
+train = diamond_clean[train_index, ]
+test = diamond_clean[-train_index, ]
+
+#lda.fit = lda(claritybool~., data = train)
+lda.fit = lda(train[, -20], grouping = train[,20])
+lda.pred = predict(lda.fit, test[, -20])
+names(lda.pred)
+
+```
