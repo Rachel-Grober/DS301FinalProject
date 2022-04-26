@@ -14,6 +14,15 @@ library(leaps)
 library(glmnet)
 ```
 
+QUESTIONS: 
+
+How do we determine what size to use for subset selection or what lambda to use for ridge/lasso when using existing methods gives us over 80 columns (in part because of factors)?
+
+
+
+
+
+
 ```{r, include = FALSE}
 diamonds = read.csv("C:/Users/thing1/Documents/SCHOOL/4th_year/DS 301/DS301FinalProject/diamonds.csv",header=TRUE)
 
@@ -27,20 +36,45 @@ priced_diamonds = some_col %>% filter(total_sales_price <10000)
 
 ## Split training and Test Sets
 
-#Best subset search 
-# NOTE THIS DID NOT WORK BECAUSE TOO MANY COLUMNS #
-#bestset = regsubsets(total_sales_price~.,nvmax = 21, data=priced_diamonds, really.big=T)
-#bestset.sum = summary(bestset)
-#bestset.sum
+
 
 
 ## BACKWARD SELECTION
-bwdset = regsubsets(total_sales_price~.,data=priced_diamonds, nvmax=98, method = "backward")
+head(priced_diamonds)
+#getting non-factor columns
+num_cols = subset(priced_diamonds,select=c(size, depth_percent, table_percent, meas_length, meas_width, meas_depth, total_sales_price))
+
+
+#Best subset search 
+# NOTE THIS DID NOT WORK BECAUSE TOO MANY COLUMNS #
+bestset = regsubsets(total_sales_price~.,nvmax = 21, data=num_cols, really.big=T)
+bestset.sum = summary(bestset)
+bestset.sum
+
+n = dim(num_cols)[1]
+p = rowSums(bestset.sum$which)
+
+brss = bestset.sum$rss
+bAIC = n*log(brss/n)+2*(p)
+bBIC = n*log(brss/n)+(p)*log(n)
+which.min(bAIC)
+which.min(bBIC)
+which.max(bestset.sum$adjr2)
+which.min(bestset.sum$cp)
+coef(bwdset,6)
+
+
+
+bwdset = regsubsets(total_sales_price~.,data=num_cols, nvmax=10, method = "backward")
+
+linear_model = lm(total_sales_price~.,data=num_cols)
+summary(linear_model)
+
 
 bwdset.sum = summary(bwdset)
 bwdset.sum
 
-n = dim(priced_diamonds)[1]
+n = dim(num_cols)[1]
 p = rowSums(bwdset.sum$which)
 
 brss = bwdset.sum$rss
@@ -50,16 +84,16 @@ which.min(bAIC)
 which.min(bBIC)
 which.max(bwdset.sum$adjr2)
 which.min(bwdset.sum$cp)
-coef(bwdset,71)
+coef(bwdset,6)
 
 ## FORWARD SELECTION
 
-fwdset = regsubsets(total_sales_price~.,data=priced_diamonds, nvmax=98, method = "forward")
+fwdset = regsubsets(total_sales_price~.,data=num_cols, nvmax=7, method = "forward")
 
 fwdset.sum = summary(fwdset)
 fwdset.sum
 
-n = dim(priced_diamonds)[1]
+n = dim(num_cols)[1]
 p = rowSums(fwdset.sum$which)
 
 frss = fwdset.sum$rss
@@ -69,7 +103,7 @@ which.min(fAIC)
 which.min(fBIC)
 which.max(fwdset.sum$adjr2)
 which.min(fwdset.sum$cp)
-coef(bwdset,67)
+coef(bwdset,6)
 
 ```
 BIC MODEL FOR BACKWARD SELECTION (coef 71)
@@ -161,15 +195,25 @@ bestlambdalasso = cv.out.lasso$lambda.min
 selambdaridge = cv.out.ridge$lambda.1se
 selambdalasso = cv.out.lasso$lambda.1se
 
-ridge.pred1 = predict(cv.out,s=bestlambdaridge,newx=x[test,])
+
+ridge.pred1 = predict(cv.out.ridge,s=bestlambdaridge,newx=x[test,])
 mean((ridge.pred1-Y[test])^2)
-lasso.pred1 = predict(cv.out,s=bestlambdalasso,newx=x[test,])
+lasso.pred1 = predict(cv.out.lasso,s=bestlambdalasso,newx=x[test,])
 mean((ridge.pred2-Y[test])^2)
-lasso.pred2 = predict(cv.out,s=selambdaridge,newx=x[test,])
+lasso.pred2 = predict(cv.out.lasso,s=selambdaridge,newx=x[test,])
 mean((lasso.pred1-Y[test])^2)
-ridge.pred.2 = predict(cv.out,s=selambdalasso,newx=x[test,])
+ridge.pred.2 = predict(cv.out.ridge,s=selambdalasso,newx=x[test,])
 mean((lasso.pred2-Y[test])^2)
 
+which(grid==bestlambdaridge)
+cv.out.ridge$lambda[81]
+coef(ridge.train)[,81]
+
+
 ```
+[1] 952606.3
+[1] 600822.8
+[1] 952590.5
+[1] 961127.8
 
-
+of the four we tried the lowest Test MSE is the minimum value for the lambda test
