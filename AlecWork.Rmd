@@ -22,7 +22,7 @@ diamonds$lab = as.factor(diamonds$lab)
 
 diamonds$widthlength = diamonds$meas_width * diamonds$meas_length
 
-diamonds = subset(diamonds,select=c( color, clarity, cut, 
+diamonds = subset(diamonds,select=c( color, clarityBin, cut, 
                                     depth_percent, table_percent, widthlength, meas_depth, total_sales_price))
 
 ```
