@@ -10,140 +10,33 @@ Split the clarity into two categories
 diamonds <- read.csv("/Users/alecrmeyer/Downloads/diamonds.csv", header=TRUE)
 diamonds$clarity <- as.factor(diamonds$clarity)
 table(diamonds$clarity)
-#Splits categories into two categories
-# new.levels<-c('below', 'below', 'below', 'above', 'below', 'below', 'below', 'above', 'above', 'above', 'above')
+
 
 library(dplyr)
-diamonds <- diamonds %>% filter(diamonds$total_sales_price < 10000)
 
 new.levels<-c('below', 'below', 'below', 'above', 'below', 'below', 'below', 'below', 'above', 'above', 'above')
 clarity <- factor(new.levels[diamonds$clarity])
 diamonds$clarityBin <- as.factor(clarity)
+
 diamonds$lab = as.factor(diamonds$lab)
 
+diamonds$widthlength = diamonds$meas_width * diamonds$meas_length
 
-#diamonds <- diamonds[c("color", "depth_percent", "table_percent", "meas_length", "meas_width", "meas_depth", "total_sales_price", "clarityBin")]
-
-diamonds <- diamonds[c("size", "depth_percent", "table_percent", "meas_length", "meas_width", "meas_depth", "total_sales_price", "cut")]
-#diamonds <- diamonds[c("total_sales_price", "clarityBin")]
-```
-
-
-```{r}
-library(dplyr)
-diamonds$clarity = as.factor(diamonds$clarity)
-new.levels = c('below', 'below' , 'below', 'above', 'below', 'below', 'below', 'above', 'above', 'above', 'above')
-x <- factor(new.levels[diamonds$clarity])
-diamonds$claritybool = x
-
-#Convert everything to factor
-diamonds$shape = as.factor(diamonds$shape)
-diamonds$color = as.factor(diamonds$color)
-diamonds$fancy_color_dominant_color = as.factor(diamonds$fancy_color_dominant_color)
-diamonds$fancy_color_secondary_color = as.factor(diamonds$fancy_color_secondary_color)
-diamonds$fancy_color_overtone = as.factor(diamonds$fancy_color_overtone)
-diamonds$fancy_color_intensity = as.factor(diamonds$fancy_color_intensity)
-
-
-diamonds$color = as.factor(diamonds$color)
-diamonds$symmetry = as.factor(diamonds$symmetry)
-diamonds$polish = as.factor(diamonds$polish)
-
-diamonds$girdle_min = as.factor(diamonds$girdle_min)
-diamonds$girdle_max = as.factor(diamonds$girdle_max)
-diamonds$culet_color = as.factor(diamonds$culet_color)
-diamonds$culet_condition = as.factor(diamonds$culet_condition)
-diamonds$fluor_color = as.factor(diamonds$fluor_color)
-diamonds$fluor_intensity = as.factor(diamonds$fluor_intensity)
-diamonds$lab = as.factor(diamonds$lab)
-diamonds$eye_clean = as.factor(diamonds$eye_clean)
-
-#str(diamonds)
-
-diamonds_clean = diamonds %>% dplyr::select(-c( clarity, date))
-
-
-
-### NEED TO PROVE USING EXPLORING DATA THAT CLARITY IS COREELATED WITH MOST VARIABLES
-#plot(diamonds$clarityBin, diamonds$total_sales_price)
+diamonds = subset(diamonds,select=c( color, clarity, cut, 
+                                    depth_percent, table_percent, widthlength, meas_depth, total_sales_price))
 
 ```
 
 
 ```{r}
+above <- sum(diamonds$clarityBin == "above")
 
+below <- sum(diamonds$clarityBin == "below")
 
-train = sample(1:nrow(diamonds),nrow(diamonds)/2, replace=FALSE)
-test = (-train)
-
-train_set <- diamonds[train,]
-test_set <- diamonds[test,]  
-
-model <- glm(clarityBin~., data=train_set, family='binomial')
-glm.prob = predict(model,test_set,type='response') 
-
-glm.pred = rep('above',nrow(test_set))
-glm.pred[glm.prob > 0.5] ='below'
-table(glm.pred,test_set$clarityBin) #rows are predicted, # columns are true 
-# This matrix is called our confusion matrix
-
-# what is our misclassification rate? 
-1-mean(glm.pred == test_set$clarityBin)
+rateAbove <- above / (above+below)
+rateBelow <- below / (above+below)
 
 ```
-
-```{r}
-library(car)
-vif(model)
-
-```
-
-```{r}
-library(caret)
-library(class)
-library(dplyr)
-
-#remove clarityBin
-diamonds_clean = diamonds %>% dplyr::select(-c(color))
-standardized.X = scale(diamonds_clean)
-
-test = sample(1:nrow(diamonds),nrow(diamonds)/40, replace=FALSE)
-
-train.X = standardized.X[-test,]
-test.X = standardized.X[test,]
-train.Y = diamonds$color[-test]
-test.Y = diamonds$color[test]
-
-
-# flds <- createFolds(diamonds$clarityBin, k = 5, list = TRUE, returnTrain = FALSE)
-# names(flds)
-# K= c(1,3,5) # nearest neighbor values
-# cv_error = matrix(NA, 5, 3)
-# for(j in 1:3){
-#   k = K[j]
-#   for(i in 1:5){
-#     test_index = flds[[i]]
-#     testX = standardized.X[test_index,]
-#     trainX = standardized.X[-test_index,]
-#     
-#     testX <- as.data.frame(testX)
-#     trainX <- as.data.frame(trainX)
-# 
-# 
-#     trainY = diamonds$clarityBin[-test_index]
-#     testY = diamonds$clarityBin[test_index]
-# 
-#     knn.pred = knn(trainX,testX,trainY,k=k)
-#     cv_error[i,j] = mean(testY!=knn.pred)
-#   }
-# }
-
-apply(cv_error,2,mean)
-
-knn.pred = knn(train.X,test.X,train.Y,k=9)
-mean(test.Y!=knn.pred)
-```
-
 Random Forrest
 ```{r}
 library(randomForest)
@@ -151,5 +44,17 @@ library(randomForest)
 train = sample(1:nrow(diamonds),nrow(diamonds)/2)
 dim(diamonds)
 
-bag.boston = randomForest(diamonds$clarityBin~.,data=diamonds, subset = train, mtry = 12, importance = TRUE, ntree=500)
+diamonds$color <- as.factor(diamonds$color)
+
+bag = randomForest(diamonds$clarityBin~.,data=diamonds, subset = train, mtry = 3, importance = TRUE, ntree=500)
+
+rf.prob = predict(bag, newdata = diamonds[-train,]) 
+
+```
+
+```{r}
+
+tab <- table(rf.prob, diamonds[-train,]$clarityBin)
+misclass <- 1-mean(rf.prob == diamonds[-train,]$clarityBin)
+
 ```
