@@ -15,9 +15,10 @@ knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 diamond = read.csv('./diamonds.csv')
 diamond$clarity = as.factor(diamond$clarity)
-new.levels = c('below', 'below' , 'below', 'above', 'below', 'below', 'below', 'above', 'above', 'above', 'above')
+new.levels = c('below', 'below' , 'below', 'above', 'below', 'below', 'below', 'above', 'below', 'above', 'above')
 x <- factor(new.levels[diamond$clarity])
 diamond$claritybool = x
+#diamond = diamond %>% filter(diamond$total_sales_price < 10000)
 
 #Convert everything to factor
 diamond$shape = as.factor(diamond$shape)
@@ -40,6 +41,7 @@ diamond$fluor_color = as.factor(diamond$fluor_color)
 diamond$fluor_intensity = as.factor(diamond$fluor_intensity)
 diamond$lab = as.factor(diamond$lab)
 diamond$eye_clean = as.factor(diamond$eye_clean)
+diamond$widthLength = diamond$meas_width * diamond$meas_length
 
 #str(diamond)
 
@@ -52,18 +54,242 @@ diamond_clean = diamond %>% dplyr::select(-c(diamond_id, clarity, date))
 #diamond_clean = diamond_clean %>% 
 #  dplyr::select(-color)
 
+diamond_clean = diamond %>% dplyr::select(c(widthLength, depth_percent, table_percent, meas_depth, total_sales_price, claritybool))
+
+#diamond_clean = diamond %>% dplyr::select(c(size, depth_percent, table_percent, meas_width, meas_length, meas_depth, total_sales_price, claritybool))
+
+```
+
+
+```{r, echo=FALSE, warning=FALSE, message='false', results='hide'}
+#barplot(dplyr::select(c()))
+
+```
+
+
+
+```{r, echo=FALSE, warning=FALSE, message='false', results='hide'}
+#library(MASS)
+#train_index = sample(1:nrow(diamond_clean), nrow(diamond_clean) / 2, rep=FALSE)
+
+#train = diamond_clean[train_index, ]
+#test = diamond_clean[-train_index, ]
+
+#lda.fit = lda(claritybool~., data = train)
+#lda.fit = lda(train[, -20], grouping = train[,20])
+#lda.pred = predict(lda.fit, test[, -20])
+#names(lda.pred)
+
+```
+
+
+```{r, echo=FALSE, warning=FALSE, message='false', results='hide'}
+library(class)
+library(caret)
+
+#ls()
+
+set.seed(780)
+
+index.train = sample(1:dim(diamond_clean)[1], dim(diamond_clean)[1], replace=FALSE)
+index.test = -index.train
+#index.test = sample(1:dim(diamond_clean)[1], 000, replace=FALSE)
+```
+
+
+```{r, echo=FALSE, warning=FALSE, message='false', results='hide'}
+training.y = diamond_clean$claritybool[index.train]
+training.x = diamond_clean[index.train, ] %>% dplyr::select(-claritybool)
+
+flds = createFolds(training.y, k = 10, list = TRUE, returnTrain = FALSE)
+
+K = c(10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)
+
+cv_error = matrix(NA, 10, 11)
+
+for(j in 1:11) {
+  k = K[j]
+  for(i in 1:10) {
+    test_index = flds[[1]]
+    testX = training.x[test_index, ]
+    trainX = training.x[-test_index, ]
+    
+    trainY = training.y[-test_index]
+    testY = training.y[test_index]
+    
+    knn.pred = knn(trainX, testX, trainY, k = k)
+    cv_error[i, j] = mean(testY != knn.pred)
+  }
+}
+
+apply(cv_error, 2, mean)
 ```
 
 ```{r, echo=FALSE, warning=FALSE, message='false', results='hide'}
-library(MASS)
-train_index = sample(1:nrow(diamond_clean), nrow(diamond_clean) / 2, rep=FALSE)
+set.seed(776)
+index.sub = sample(1:dim(diamond_clean)[1], dim(diamond_clean)[1], replace=FALSE)
 
-train = diamond_clean[train_index, ]
-test = diamond_clean[-train_index, ]
+diamond_sub = diamond_clean[index.sub, ]
 
-#lda.fit = lda(claritybool~., data = train)
-lda.fit = lda(train[, -20], grouping = train[,20])
-lda.pred = predict(lda.fit, test[, -20])
-names(lda.pred)
-
+index.train = sample(1:dim(diamond_sub)[1], dim(diamond_sub)[1] / 2, replace=FALSE)
+index.test = -index.train
+#index.test = sample(1:dim(diamond_clean)[1], 000, replace=FALSE)
 ```
+
+```{r, echo=FALSE, warning=FALSE, message='false'}
+training.y = diamond_sub$claritybool[index.train]
+training.x = diamond_sub[index.train, ] %>% dplyr::select(-claritybool)
+testing.x = diamond_sub[index.test, ] %>% dplyr::select(-claritybool)
+testing.y = diamond_sub$claritybool[index.test]
+
+knn.pred = knn(training.x, testing.x, training.y, k = 11)
+table(knn.pred, testing.y)
+```
+New:
+
+Remove High Cost Diamonds k = 17
+
+testing.y
+knn.pred above below
+   above 25441 16336
+   below 19668 32954
+   
+Misclassification rate: 38.14%
+
+Remove High Cost of Diamonds k = 11
+testing.y
+knn.pred above below
+   above 25661 16431
+   below 19448 32859
+   
+Misclassification rate: 38.01%
+
+
+Full dataset k = 17
+
+testing.y
+knn.pred above below
+   above 27661 18735
+   below 24261 39195
+   
+Misclassification rate: 39.14%
+
+k = 11
+
+testing.y
+knn.pred above below
+   above 28190 19247
+   below 23732 38683
+   
+Misclassification rate: 39.12%
+
+Cleaning k = 11
+
+testing.y
+knn.pred above below
+   above 30892 14487
+   below 21030 43443
+   
+Misclassification rate: 32.33%
+
+
+
+OLD:
+
+Full
+        testing.y
+knn.pred above below
+   above 27761 18939
+   below 24161 38991
+
+Remove High cost >= 10000
+ testing.y
+knn.pred above below
+   above 25059 16078
+   below 20149 33113
+
+```{r, echo=FALSE, warning=FALSE, message='false', results='hide'}
+
+set.seed(1444)
+index.sub = sample(1:dim(diamond_clean)[1], dim(diamond_clean)[1], replace=FALSE)
+
+diamond_sub = diamond_clean[index.sub, ]
+
+index.train = sample(1:dim(diamond_sub)[1], dim(diamond_sub)[1] / 2, replace=FALSE)
+index.test = -index.train
+#index.test = sample(1:dim(diamond_clean)[1], 000, replace=FALSE)
+```
+
+```{r, echo=FALSE, warning=FALSE, message='false'}
+training.y = diamond_sub$claritybool[index.train]
+training.x = diamond_sub[index.train, ] %>% dplyr::select(-claritybool)
+testing.x = diamond_sub[index.test, ] %>% dplyr::select(-claritybool)
+testing.y = diamond_sub$claritybool[index.test]
+
+knn.pred = knn(training.x, testing.x, training.y, k = 11)
+table(knn.pred, testing.y)
+```
+NEW:
+
+Remove High Cost Diamonds k = 17
+
+testing.y
+knn.pred above below
+   above 25260 16243
+   below 19780 33116
+   
+Misclassification rate: 38.16%
+
+k = 11
+
+testing.y
+knn.pred above below
+   above 25767 16652
+   below 19273 32707
+   
+Misclassification rate: 38.06% 
+
+Full Dataset k = 17
+
+testing.y
+knn.pred above below
+   above 27617 18995
+   below 24222 39018
+   
+Misclassification rate: 39.34%
+
+k = 11
+
+testing.y
+knn.pred above below
+   above 28365 19358
+   below 23474 38655
+   
+Misclassification rate: 39.00%
+
+Cleaning k = 11
+
+testing.y
+knn.pred above below
+   above 31067 14698
+   below 20772 43315
+   
+Misclassification rate: 32.29% 
+
+
+
+OLD:
+
+Full
+testing.y
+knn.pred above below
+   above 27761 19225
+   below 24078 38788
+
+Rmove High Cost (>=10000)
+testing.y
+knn.pred above below
+   above 25417 16300
+   below 19752 32930
+   
+0.6180892
