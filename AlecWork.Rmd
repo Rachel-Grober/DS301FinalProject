@@ -9,69 +9,52 @@ Split the clarity into two categories
 ```{r}
 diamonds <- read.csv("/Users/alecrmeyer/Downloads/diamonds.csv", header=TRUE)
 diamonds$clarity <- as.factor(diamonds$clarity)
+table(diamonds$clarity)
 
-#Splits categories into two categories
-new.levels<-c('below', 'below', 'below', 'above', 'below', 'below', 'below', 'above', 'above', 'above', 'above')
+
+library(dplyr)
+
+new.levels<-c('below', 'below', 'below', 'above', 'below', 'below', 'below', 'below', 'above', 'above', 'above')
 clarity <- factor(new.levels[diamonds$clarity])
 diamonds$clarityBin <- as.factor(clarity)
-diamonds <- diamonds[, -which(names(diamonds) %in% c("clarity","diamond_id", "date", "fancy_color_dominant_color", "fancy_color_secondary_color", "fancy_color_overtone", "fancy_color_intensity", "culet_size", "culet_condition", "fluor_color", "eye_clean", "girdle_max", "girdle_min" ))]
+
+diamonds$lab = as.factor(diamonds$lab)
+
+diamonds$widthlength = diamonds$meas_width * diamonds$meas_length
+
+diamonds = subset(diamonds,select=c( color, clarityBin, cut, 
+                                    depth_percent, table_percent, widthlength, meas_depth, total_sales_price))
+
+```
+
+
+```{r}
+above <- sum(diamonds$clarityBin == "above")
+
+below <- sum(diamonds$clarityBin == "below")
+
+rateAbove <- above / (above+below)
+rateBelow <- below / (above+below)
+
+```
+Random Forrest
+```{r}
+library(randomForest)
+
+train = sample(1:nrow(diamonds),nrow(diamonds)/2)
+dim(diamonds)
+
+diamonds$color <- as.factor(diamonds$color)
+
+bag = randomForest(diamonds$clarityBin~.,data=diamonds, subset = train, mtry = 3, importance = TRUE, ntree=500)
+
+rf.prob = predict(bag, newdata = diamonds[-train,]) 
+
 ```
 
 ```{r}
-train = sample(1:nrow(diamonds),nrow(diamonds)/2, replace=FALSE)
-test = (-train)
 
-train_set <- diamonds[train,]
-test_set <- diamonds[test,]  
+tab <- table(rf.prob, diamonds[-train,]$clarityBin)
+misclass <- 1-mean(rf.prob == diamonds[-train,]$clarityBin)
 
-model <- glm(clarityBin~., data=train_set, family='binomial')
-glm.prob = predict(model,test_set,type='response') 
-
-glm.pred = rep('above',nrow(test_set))
-glm.pred[glm.prob > 0.5] ='below'
-table(glm.pred,test_set$clarityBin) #rows are predicted, # columns are true 
-# This matrix is called our confusion matrix
-
-# what is our misclassification rate? 
-1-mean(glm.pred == test_set$clarityBin)
-```
-
-```{r}
-library(caret)
-
-#remove clarityBin
-standardized.X = scale(diamonds[,-c(21, 1, 3, 4, 5, 6, 12, 13, 15)])
-
-train.X = standardized.X[-test,]
-test.X = standardized.X[test,]
-train.Y = diamonds$clarityBin[-test]
-test.Y = diamonds$clarityBin[test]
-
-
-flds <- createFolds(diamonds$clarityBin, k = 5, list = TRUE, returnTrain = FALSE)
-names(flds)
-
-K= c(1,3,5) # nearest neighbor values
-
-cv_error = matrix(NA, 5, 3)
-
-for(j in 1:3){
-  k = K[j]
-  for(i in 1:5){
-    test_index = flds[[i]]
-    testX = standardized.X[test_index,]
-    trainX = standardized.X[-test_index,]
-    
-    trainY = diamonds$clarityBin[-test_index]
-    testY = diamonds$clarityBin[test_index]
-    
-    knn.pred = knn(trainX,testX,trainY,k=k)
-    cv_error[i,j] = mean(testY!=knn.pred)
-  }
-}
-
-apply(cv_error,2,mean)
-
-knn.pred = knn(train.X,test.X,train.Y,k=5)
-mean(test.Y!=knn.pred)
 ```
