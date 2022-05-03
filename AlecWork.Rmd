@@ -46,7 +46,7 @@ dim(diamonds)
 
 diamonds$color <- as.factor(diamonds$color)
 
-bag = randomForest(diamonds$clarityBin~.,data=diamonds, subset = train, mtry = 3, importance = TRUE, ntree=500)
+bag = randomForest(diamonds$clarity~.,data=diamonds, subset = train, mtry = 3, importance = TRUE, ntree=500)
 
 rf.prob = predict(bag, newdata = diamonds[-train,]) 
 
@@ -54,7 +54,14 @@ rf.prob = predict(bag, newdata = diamonds[-train,])
 
 ```{r}
 
-tab <- table(rf.prob, diamonds[-train,]$clarityBin)
-misclass <- 1-mean(rf.prob == diamonds[-train,]$clarityBin)
+tab <- table(rf.prob, diamonds[-train,]$clarity)
+misclass <- 1-mean(rf.prob == diamonds[-train,]$clarity)
+
+```
+
+normalize total sales price
+```{r}
+diamonds <- diamonds %>% filter(diamonds$total_sales_price < 10000)
+x <- qnorm(1-exp(-1/mean(diamonds$total_sales_price)*diamonds$total_sales_price))
 
 ```
