@@ -26,6 +26,12 @@ What type of information should we include in the methodology section? Should we
 
 ```{r, include = FALSE}
 diamonds = read.csv("C:/Users/thing1/Documents/SCHOOL/4th_year/DS 301/DS301FinalProject/diamonds.csv",header=TRUE)
+most = subset(diamonds,select=-c(date))
+model = lm(total_sales_price~.,data=most)
+color = rgb(red=0,green=1, blue = 0, alpha=0.01)
+plot(model$residuals,model$fitted.values, col = color)
+
+?plot
 
 head(diamonds)
 
@@ -155,7 +161,6 @@ bestlambdalasso = cv.out.lasso$lambda.min
 selambdaridge = cv.out.ridge$lambda.1se
 selambdalasso = cv.out.lasso$lambda.1se
 
-
 ridge.pred1 = predict(cv.out.ridge,s=bestlambdaridge,newx=x[test,])
 mean((ridge.pred1-Y[test])^2)
 lasso.pred1 = predict(cv.out.lasso,s=bestlambdalasso,newx=x[test,])
@@ -164,7 +169,9 @@ ridge.pred2 = predict(cv.out.ridge,s=selambdaridge,newx=x[test,])
 mean((ridge.pred2-Y[test])^2)
 lasso.pred2 = predict(cv.out.lasso,s=selambdalasso,newx=x[test,])
 mean((lasso.pred2-Y[test])^2)
+bestlambdaridge
 bestlambdalasso
+grid
 which(grid==bestlambdalasso)
 cv.out.lasso$lambda[56]
 coef(lasso.train)[,56]
