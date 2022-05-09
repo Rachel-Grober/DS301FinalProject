@@ -42,10 +42,26 @@ diamonds$cut <- factor(diamonds$cut, levels=c("None", "Fair", "Good", "Very Good
 diamonds$polish <- factor(diamonds$polish, levels=c("Poor", "Fair", "Good", "Very Good", "Excellent"))
 diamonds$symmetry <- factor(diamonds$symmetry, levels=c("Poor", "Fair", "Good", "Very Good", "Excellent"))
 diamonds$culet_condition <- factor(diamonds$culet_condition, levels=c("Pointed", "Chipped", "Abraded"))
-diamonds$flour_color <- factor(diamonds$flour_color, levels=c("Blue", "Green", "Orange", "Yellow", "White"))
-diamonds$flour_color <- factor(diamonds$flour_color, levels=c("None", "Faint", "Very Slight", "Slight", "Medium", "Very Strong"))
+diamonds$fluor_color <- factor(diamonds$fluor_color, levels=c("Blue", "Green", "Orange", "Yellow", "White"))
+diamonds$fluor_color <- factor(diamonds$fluor_color, levels=c("None", "Faint", "Very Slight", "Slight", "Medium", "Strong", "Very Strong"))
+diamonds$fluor_intensity <- factor(diamonds$fluor_intensity, levels=c("None", "Faint", "Very Slight", "Slight", "Medium", "Strong", "Very Strong"))
 diamonds$girdle_max <- factor(diamonds$girdle_max, levels=c("XTN", "VTN", "TN", "STN", "M", "STK", "TK", "VTK", "XTK"))
 diamonds$girdle_min <- factor(diamonds$girdle_min, levels=c("XTN", "VTN", "TN", "STN", "M", "STK", "TK", "VTK", "XTK"))
+diamonds = subset(diamonds,select= -c(eye_clean))
+diamonds = subset(diamonds,select= -c(lab))
+diamonds = subset(diamonds,select= -c(fancy_color_dominant_color, fancy_color_secondary_color, fancy_color_overtone, fancy_color_intensity))
+
+diamonds = subset(diamonds, select = c(clarityBin, size, color, cut, total_sales_price, depth_percent, table_percent, meas_length, meas_width, meas_depth))
+
+
+
+diamonds$color <- as.numeric(diamonds$color)
+diamonds$cut <- as.numeric(diamonds$cut)
+diamonds$clarityBin <- as.numeric(diamonds$clarityBin)
+
+diamonds <- na.omit(diamonds)
+
+
 
 
 #diamonds$shape <- 
@@ -82,4 +98,20 @@ normalize total sales price
 diamonds <- diamonds %>% filter(diamonds$total_sales_price < 10000)
 x <- qnorm(1-exp(-1/mean(diamonds$total_sales_price)*diamonds$total_sales_price))
 
+```
+
+KNN
+```{r}
+library(class)
+library(caret)
+train = sample(1:nrow(diamonds),nrow(diamonds)/2)
+
+
+training.y = diamonds$clarityBin[train]
+training.x = diamonds[train, ] 
+testing.x = diamonds[-train, ] 
+testing.y = diamonds$clarityBin[-train]
+
+knn.pred = knn(training.x, testing.x, training.y, k = 3)
+table(knn.pred, testing.y)
 ```
