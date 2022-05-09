@@ -7,23 +7,19 @@ output: html_document
 
 Split the clarity into two categories
 ```{r}
+
 diamonds <- read.csv("/Users/alecrmeyer/Downloads/diamonds.csv", header=TRUE)
+
 diamonds$clarity <- as.factor(diamonds$clarity)
-table(diamonds$clarity)
 
-
-library(dplyr)
+#diamonds <- diamonds %>% filter(diamonds$clarity != "VS1")
+#diamonds <- diamonds %>% filter(diamonds$clarity != "VS2")
 
 new.levels<-c('below', 'below', 'below', 'above', 'below', 'below', 'below', 'below', 'above', 'above', 'above')
 clarity <- factor(new.levels[diamonds$clarity])
 diamonds$clarityBin <- as.factor(clarity)
 
-diamonds$lab = as.factor(diamonds$lab)
-
-diamonds$widthlength = diamonds$meas_width * diamonds$meas_length
-
-diamonds = subset(diamonds,select=c( color, clarityBin, cut, 
-                                    depth_percent, table_percent, widthlength, meas_depth, total_sales_price))
+diamonds = subset(diamonds,select= -c(clarity, diamond_id, date))
 
 ```
 
@@ -37,25 +33,47 @@ rateAbove <- above / (above+below)
 rateBelow <- below / (above+below)
 
 ```
+
+Distance
+```{r}
+diamonds$culet_size <- factor(diamonds$culet_size, levels=c("N","VS","S", "M", "SL", "L", "VL", "EL"))
+diamonds$color <- as.factor(diamonds$color)
+diamonds$cut <- factor(diamonds$cut, levels=c("None", "Fair", "Good", "Very Good", "Excellent"))
+diamonds$polish <- factor(diamonds$polish, levels=c("Poor", "Fair", "Good", "Very Good", "Excellent"))
+diamonds$symmetry <- factor(diamonds$symmetry, levels=c("Poor", "Fair", "Good", "Very Good", "Excellent"))
+diamonds$culet_condition <- factor(diamonds$culet_condition, levels=c("Pointed", "Chipped", "Abraded"))
+diamonds$flour_color <- factor(diamonds$flour_color, levels=c("Blue", "Green", "Orange", "Yellow", "White"))
+diamonds$flour_color <- factor(diamonds$flour_color, levels=c("None", "Faint", "Very Slight", "Slight", "Medium", "Very Strong"))
+diamonds$girdle_max <- factor(diamonds$girdle_max, levels=c("XTN", "VTN", "TN", "STN", "M", "STK", "TK", "VTK", "XTK"))
+diamonds$girdle_min <- factor(diamonds$girdle_min, levels=c("XTN", "VTN", "TN", "STN", "M", "STK", "TK", "VTK", "XTK"))
+
+
+#diamonds$shape <- 
+
+
+```
+
 Random Forrest
 ```{r}
 library(randomForest)
 
+library(dplyr)
+
 train = sample(1:nrow(diamonds),nrow(diamonds)/2)
 dim(diamonds)
 
-diamonds$color <- as.factor(diamonds$color)
+diamonds$clarityBin <- as.factor(diamonds$clarityBin)
 
-bag = randomForest(diamonds$clarity~.,data=diamonds, subset = train, mtry = 3, importance = TRUE, ntree=500)
+rf = randomForest(diamonds$clarityBin~.,data=diamonds, subset = train, mtry = 5, importance = TRUE, ntree=500)
 
-rf.prob = predict(bag, newdata = diamonds[-train,]) 
+rf.prob = predict(rf, newdata = diamonds[-train,]) 
 
 ```
 
 ```{r}
 
-tab <- table(rf.prob, diamonds[-train,]$clarity)
-misclass <- 1-mean(rf.prob == diamonds[-train,]$clarity)
+tab <- table(rf.prob, diamonds[-train,]$clarityBin)
+misclass <- 1-mean(rf.prob == diamonds[-train,]$clarityBin)
 
 ```
 
