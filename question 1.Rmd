@@ -26,84 +26,415 @@ What type of information should we include in the methodology section? Should we
 
 ```{r, include = FALSE}
 diamonds = read.csv("C:/Users/thing1/Documents/SCHOOL/4th_year/DS 301/DS301FinalProject/diamonds.csv",header=TRUE)
-most = subset(diamonds,select=-c(date))
-model = lm(total_sales_price~.,data=most)
-color = rgb(red=0,green=1, blue = 0, alpha=0.01)
-plot(model$residuals,model$fitted.values, col = color)
+#most = subset(diamonds,select=-c(date))
+#model = lm(total_sales_price~.,data=most)
+#color = rgb(red=0,green=1, blue = 0, alpha=0.01)
+#plot(model$residuals,model$fitted.values, col = color)
 
-?plot
+#?plot
+```
 
-head(diamonds)
+```{r}
+diamonds = subset(diamonds,select= -c( diamond_id, date))
+
+
+
+
+#### CLARITY ####
+diamonds$clarity <- as.factor(diamonds$clarity)
+
+#diamonds <- diamonds %>% filter(diamonds$clarity != "VS1")
+#diamonds <- diamonds %>% filter(diamonds$clarity != "VS2")
+
+new.levels<-c('below', 'below', 'below', 'above', 'below', 'below', 'below', 'below', 'above', 'above', 'above')
+clarity <- factor(new.levels[diamonds$clarity])
+diamonds$clarityBin <- as.factor(clarity)
+
+
+
+#### CULET SIZE ####
+diamonds$culet_size <- factor(diamonds$culet_size, levels=c("N","VS","S", "M", "SL", "L", "VL", "EL"))
+new.levels<-c('None','small','small','large','large','large','large','large')
+
+culet_size <-factor(new.levels[diamonds$culet_size])
+culet_size_na <-addNA(culet_size)
+levels(culet_size_na)<-c(levels(culet_size),"None")
+diamonds$culet_size_bin<-as.factor(culet_size_na)
+
+none <- sum(diamonds$culet_size_bin == 'none')
+small <- sum(diamonds$culet_size_bin == 'small')
+large <- sum(diamonds$culet_size_bin == "large")
+rateSmall <- small / (length(diamonds$culet_size_bin))
+rateLarge <- large / (length(diamonds$culet_size_bin))
+
+#### COLOR ####
+diamonds$color <- as.factor(diamonds$color)
+
+
+#### CUT ####
+
+
+diamonds$cut <- factor(diamonds$cut, levels=c("None", "Fair", "Good", "Very Good", "Excellent"))
+new.levels<-c('None','below','below','above','above')
+
+cut <-factor(new.levels[diamonds$cut])
+cut_na <-addNA(cut)
+levels(cut_na)<-c(levels(cut),"None")
+diamonds$cut_bin<-as.factor(cut_na)
+
+none <- sum(diamonds$cut_bin == 'None')
+small <- sum(diamonds$cut_bin == 'above')
+large <- sum(diamonds$cut_bin == "below")
+rateNone <- none/(length(diamonds$cut_bin))
+rateSmall <- small / (length(diamonds$cut_bin))
+rateLarge <- large / (length(diamonds$cut_bin))
+
+
+### POLISH ###
+diamonds$polish <- factor(diamonds$polish, levels=c("Poor", "Fair", "Good", "Very Good", "Excellent"))
+new.levels<-c('below','below','below','above','above')
+
+polish <-factor(new.levels[diamonds$polish])
+polish_na <-addNA(polish)
+levels(polish_na)<-c(levels(polish),"None")
+diamonds$polish_bin<-as.factor(polish_na)
+
+none <- sum(diamonds$polish_bin == 'None')
+small <- sum(diamonds$polish_bin == 'above')
+large <- sum(diamonds$polish_bin == "below")
+rateNone <- none/(length(diamonds$polish_bin))
+rateSmall <- small / (length(diamonds$polish_bin))
+rateLarge <- large / (length(diamonds$polish_bin))
+
+
+#### SYMMETRY ####
+diamonds$symmetry <- factor(diamonds$symmetry, levels=c("Poor", "Fair", "Good", "Very Good", "Excellent"))
+new.levels<-c('below','below','below','above','above')
+
+symmetry <-factor(new.levels[diamonds$symmetry])
+symmetry_na <-addNA(symmetry)
+levels(symmetry_na)<-c(levels(symmetry),"None")
+diamonds$symmetry_bin<-as.factor(symmetry_na)
+
+none <- sum(diamonds$symmetry_bin == 'None')
+small <- sum(diamonds$symmetry_bin == 'above')
+large <- sum(diamonds$symmetry_bin == "below")
+rateNone <- none/(length(diamonds$symmetry_bin))
+rateSmall <- small / (length(diamonds$symmetry_bin))
+rateLarge <- large / (length(diamonds$symmetry_bin))
+
+#### CULLET CONDITION ####
+diamonds$culet_condition <- factor(diamonds$culet_condition, levels=c("Pointed", "Chipped", "Abraded"))
+new.levels<-c('conditioned','conditioned','conditioned')
+
+culet_condition <-factor(new.levels[diamonds$culet_condition])
+culet_condition_na <-addNA(culet_condition)
+levels(culet_condition_na)<-c(levels(culet_condition),"None")
+diamonds$culet_condition_bin<-as.factor(culet_condition_na)
+
+none <- sum(diamonds$culet_condition_bin == 'None')
+small <- sum(diamonds$culet_condition_bin == 'conditioned')
+rateNone <- none/(length(diamonds$culet_condition_bin))
+rateSmall <- small / (length(diamonds$culet_condition_bin))
+
+#### Fluor Color ####
+diamonds$fluor_color <- factor(diamonds$fluor_color, levels=c("Blue", "Green", "Orange", "Yellow", "White"))
+new.levels <-c("fluor_colored", "fluor_colored", "fluor_colored", "fluor_colored", "fluor_colored")
+fluor_color <-factor(new.levels[diamonds$fluor_color])
+fluor_color_na <-addNA(fluor_color)
+levels(fluor_color_na)<-c(levels(fluor_color),"None")
+diamonds$fluor_color_bin<-as.factor(fluor_color_na)
+
+none <- sum(diamonds$fluor_color_bin == 'None')
+small <- sum(diamonds$fluor_color_bin == 'fluor_colored')
+rateNone <- none/(length(diamonds$fluor_color_bin))
+rateSmall <- small / (length(diamonds$fluor_color_bin))
+
+#### FLUOR INTENSITY ####
+diamonds$fluor_intensity <- factor(diamonds$fluor_intensity, levels=c("None", "Faint", "Very Slight", "Slight", "Medium", "Strong", "Very Strong"))
+new.levels <-c("None", "below", "below", "below", "above", "above","above")
+fluor_intensity <-factor(new.levels[diamonds$fluor_intensity])
+fluor_intensity_na <-addNA(fluor_intensity)
+levels(fluor_intensity_na)<-c(levels(fluor_intensity),"None")
+diamonds$fluor_intensity_bin<-as.factor(fluor_intensity_na)
+
+
+none <- sum(diamonds$fluor_intensity_bin == 'None')
+small <- sum(diamonds$fluor_intensity_bin == 'above')
+large <- sum(diamonds$fluor_intensity_bin == "below")
+rateNone <- none/(length(diamonds$fluor_intensity_bin))
+rateSmall <- small / (length(diamonds$fluor_intensity_bin))
+rateLarge <- large / (length(diamonds$fluor_intensity_bin))
+
+
+#### GIRDLE MAX ####
+diamonds$girdle_max <- factor(diamonds$girdle_max, levels=c("XTN", "VTN", "TN", "STN", "M", "STK", "TK", "VTK", "XTK"))
+new.levels <-c("below", "below", "below", "below", "below", "above","above", "above", "above")
+girdle_max <-factor(new.levels[diamonds$girdle_max])
+girdle_max_na <-addNA(girdle_max)
+levels(girdle_max_na)<-c(levels(girdle_max),"None")
+diamonds$girdle_max_bin<-as.factor(girdle_max_na)
+
+none <- sum(diamonds$girdle_max_bin == 'None')
+small <- sum(diamonds$girdle_max_bin == 'below')
+large <- sum(diamonds$girdle_max_bin == "above")
+rateNone <- none/(length(diamonds$girdle_max_bin))
+rateSmall <- small / (length(diamonds$girdle_max_bin))
+rateLarge <- large / (length(diamonds$girdle_max_bin))
+
+
+#### GIRDLE MIN ####
+diamonds$girdle_min <- factor(diamonds$girdle_min, levels=c("XTN", "VTN", "TN", "STN", "M", "STK", "TK", "VTK", "XTK"))
+new.levels <-c("below", "below", "below", "below", "below", "above","above", "above", "above")
+girdle_min <-factor(new.levels[diamonds$girdle_min])
+girdle_min_na <-addNA(girdle_min)
+levels(girdle_min_na)<-c(levels(girdle_min),"None")
+diamonds$girdle_min_bin<-as.factor(girdle_min_na)
+
+none <- sum(diamonds$girdle_min_bin == 'None')
+small <- sum(diamonds$girdle_min_bin == 'below')
+large <- sum(diamonds$girdle_min_bin == "above")
+rateNone <- none/(length(diamonds$girdle_min_bin))
+rateSmall <- small / (length(diamonds$girdle_min_bin))
+rateLarge <- large / (length(diamonds$girdle_min_bin))
+
+
+#### EYE CLEAN ####
+diamonds$eye_clean <- factor(diamonds$eye_clean, levels=c("No", "Borderline", "E1", "Yes"))
+new.levels <-c("listed", "listed", "listed", "listed")
+eye_clean <-factor(new.levels[diamonds$eye_clean])
+eye_clean_na <-addNA(eye_clean)
+levels(eye_clean_na)<-c(levels(eye_clean),"None")
+diamonds$eye_clean_bin<-as.factor(eye_clean_na)
+
+none <- sum(diamonds$eye_clean_bin == 'None')
+listed <- sum(diamonds$eye_clean_bin == 'listed')
+rateNone <- none/(length(diamonds$eye_clean_bin))
+ratelisted <- listed / (length(diamonds$eye_clean_bin))
+
+#### FANCY COLOR DOMINANT COLOR ####
+diamonds$fancy_color_dominant_color <- factor(diamonds$fancy_color_dominant_color, levels=c("Black","Blue","Brown","Chameleon","Gray","Green","Orange","Other","Pink","Purple","Yellow"))
+new.levels <-c("listed", "listed", "listed", "listed","listed","listed","listed","listed","listed","listed","listed" )
+fancy_color_dominant_color <-factor(new.levels[diamonds$fancy_color_dominant_color])
+fancy_color_dominant_color_na <-addNA(fancy_color_dominant_color)
+levels(fancy_color_dominant_color_na)<-c(levels(fancy_color_dominant_color),"None")
+diamonds$fancy_color_dominant_color_bin<-as.factor(fancy_color_dominant_color_na)
+
+none <- sum(diamonds$fancy_color_dominant_color_bin == 'None')
+listed <- sum(diamonds$fancy_color_dominant_color_bin == 'listed')
+rateNone <- none/(length(diamonds$fancy_color_dominant_color_bin))
+ratelisted <- listed / (length(diamonds$fancy_color_dominant_color_bin))
+
+
+
+
+#### FANCY COLOR SECONDARY COLOR ####
+diamonds$fancy_color_secondary_color <- factor(diamonds$fancy_color_secondary_color, levels=c("Blue","Brown","Gray","Green","Orange","Pink","Purple","Yellow"))
+new.levels <-c("listed", "listed", "listed", "listed","listed","listed","listed","listed")
+fancy_color_secondary_color <-factor(new.levels[diamonds$fancy_color_secondary_color])
+fancy_color_secondary_color_na <-addNA(fancy_color_secondary_color)
+levels(fancy_color_secondary_color_na)<-c(levels(fancy_color_secondary_color),"None")
+diamonds$fancy_color_secondary_color_bin<-as.factor(fancy_color_secondary_color_na)
+
+none <- sum(diamonds$fancy_color_secondary_color_bin == 'None')
+listed <- sum(diamonds$fancy_color_secondary_color_bin == 'listed')
+rateNone <- none/(length(diamonds$fancy_color_secondary_color_bin))
+ratelisted <- listed / (length(diamonds$fancy_color_secondary_color_bin))
+
+
+
+
+#### FANCY COLOR OVERTONE ####
+diamonds$fancy_color_overtone <- factor(diamonds$fancy_color_overtone, levels=c("Brownish","Grayish","Greenish","None","Orangey","Pinkish","Purplish","Yellowish"))
+new.levels <-c("listed", "listed", "listed", "listed","listed","listed","listed","listed")
+fancy_color_overtone <-factor(new.levels[diamonds$fancy_color_overtone])
+fancy_color_overtone_na <-addNA(fancy_color_overtone)
+levels(fancy_color_overtone_na)<-c(levels(fancy_color_overtone),"None")
+diamonds$fancy_color_overtone_bin<-as.factor(fancy_color_overtone_na)
+
+none <- sum(diamonds$fancy_color_overtone_bin == 'None')
+listed <- sum(diamonds$fancy_color_overtone_bin == 'listed')
+rateNone <- none/(length(diamonds$fancy_color_overtone_bin))
+ratelisted <- listed / (length(diamonds$fancy_color_overtone_bin))
+
+
+
+
+#### Fancy Color Intensity ####
+diamonds$fancy_color_intensity <- factor(diamonds$fancy_color_intensity, levels=c("Faint","Fancy","Fancy Dark","Fancy Deep","Fancy Intense","Fancy Light","Fancy Vivid","Light","Very Light"))
+new.levels <-c("listed", "listed", "listed", "listed","listed","listed","listed","listed", "listed")
+fancy_color_intensity <-factor(new.levels[diamonds$fancy_color_intensity])
+fancy_color_intensity_na <-addNA(fancy_color_intensity)
+levels(fancy_color_intensity_na)<-c(levels(fancy_color_intensity),"None")
+diamonds$fancy_color_intensity_bin<-as.factor(fancy_color_intensity_na)
+
+none <- sum(diamonds$fancy_color_intensity_bin == 'None')
+listed <- sum(diamonds$fancy_color_intensity_bin == 'listed')
+rateNone <- none/(length(diamonds$fancy_color_intensity_bin))
+ratelisted <- listed / (length(diamonds$fancy_color_intensity_bin))
+
+
+summary(diamonds$fancy_color_intensity_bin)
+
+
+
+diamonds_binned = subset(diamonds, select = c(clarityBin, size, color, cut_bin, total_sales_price, depth_percent, table_percent, meas_length, meas_width, meas_depth, fancy_color_dominant_color_bin, fancy_color_overtone_bin, fancy_color_secondary_color_bin, girdle_min_bin,girdle_max_bin, culet_size_bin, culet_condition_bin, fluor_intensity_bin, fluor_color_bin, lab, eye_clean_bin, polish_bin,symmetry_bin))
+
+```
+
+
+
+
+```{r}
+cor(diamonds_binned)
+train = sample(1:nrow(diamonds_binned), nrow(diamonds_binned)*.7)
+test=(-train)
+train_data = diamonds_binned[train,]
+test_data = diamonds_binned[-train,]
+
+
+
+model = lm(total_sales_price ~., data=train_data)
+summary(model)
+MSE_train = mean((train_data$total_sales_price - model$fitted.values)^2) 
+MSE_train
+
+
+predicted_values = predict(model,test_data)
+MSE_test = mean((test_data$total_sales_price - predicted_values)^2)
+MSE_test
+
+model = lm(total_sales_price ~., data = diamonds_orig)
+summary(model)
+sum(is.na(diamonds$fancy_color_intensity))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+````{r}
+#head(diamonds)
 
 some_col = subset(diamonds,select=c(size, color, clarity, cut, 
                                     depth_percent, table_percent, meas_width, meas_length, meas_depth, total_sales_price))
 
-model_of_diamonds = lm(total_sales_price~., data = some_col)
-vif(model_of_diamonds)
+#model_of_diamonds = lm(total_sales_price~., data = some_col)
+#vif(model_of_diamonds)
 
 
 diamonds$widthlength = diamonds$meas_width * diamonds$meas_length
 some_col = subset(diamonds,select=c( color, clarity, cut, 
                                     depth_percent, table_percent, widthlength, meas_depth, total_sales_price))
-model_of_diamonds = lm(total_sales_price~., data = some_col)
-vif(model_of_diamonds)
+#model_of_diamonds = lm(total_sales_price~., data = some_col)
+#vif(model_of_diamonds)
 
-ggplot(data = diamonds, aes(meas_width, meas_depth))+geom_point(color = 'blue', alpha = 0.1)+facet_wrap(~shape)
-ggplot(data = diamonds, aes(meas_width, meas_length))+geom_point(color = 'blue', alpha = 0.1)#+facet_wrap(~shape)
-ggplot(data = diamonds, aes(widthlength, size))+geom_point(color = 'blue', alpha = 0.1)
+#ggplot(data = diamonds, aes(meas_width, meas_depth))+geom_point(color = 'blue', alpha = 0.1)+facet_wrap(~shape)
+#ggplot(data = diamonds, aes(meas_width, meas_length))+geom_point(color = 'blue', alpha = 0.1)#+facet_wrap(~shape)
+#ggplot(data = diamonds, aes(widthlength, size))+geom_point(color = 'blue', alpha = 0.1)
+priced_diamonds = some_col %>% filter(total_sales_price <10000)
+
+
+train = sample(1:nrow(priced_diamonds), nrow(priced_diamonds)/2)
+test=(-train)
+train_data = priced_diamonds[train,]
+test_data = priced_diamonds[-train,]
 
 
 ```
 
 Best subset
 ```{r}
-head(some_col)
+head(train_data)
 ## get only the diamonds under 10k
 #priced_diamonds = some_col %>% filter(total_sales_price <10000)
+#hist(priced_diamonds$total_sales_price)
 
 
 #Best subset search 
-bestset = regsubsets(total_sales_price~.,nvmax = 33, data=some_col, really.big=T)
+bestset = regsubsets(total_sales_price~.,nvmax = 33, data=train_data, really.big=T)
 bestset.sum = summary(bestset)
 
-n = dim(some_col)[1]
+n = dim(train_data)[1]
 p = rowSums(bestset.sum$which)
 
 brss = bestset.sum$rss
 bAIC = n*log(brss/n)+2*(p)
 bBIC = n*log(brss/n)+(p)*log(n)
 which.min(bAIC)
-bAIC[28]
+bAIC[27]
 which.min(bBIC)
-bBIC[24]
+bBIC[26]
 which.max(bestset.sum$adjr2)
-bestset.sum$adjr2[28]
+bestset.sum$adjr2[27]
 which.min(bestset.sum$cp)
-bestset.sum$cp[28]
-coef(bwdset,24)
+bestset.sum$cp[27]
+coef(bestset,26)
+bestset
+
+
+fwdset = regsubsets(Apps~.,data=College, nvmax=17, method = "forward")
+fwdset.sum = summary(fwdset)
+fwdset.sum
+
+
+test.mat = model.matrix(total_sales_price~.,data=test_data)
+coef.m = coef(bestset, id = 26)
+pred = test.mat[,names(coef.m)]%*%coef.m
+mse = mean((test_data$total_sales_price - pred)^2)
+mse
+
 ```
 
 forward selection
 ```{r}
 #### BACKWARD SELECTION
-bwdset = regsubsets(total_sales_price~.,data=some_col, nvmax=50, method = "backward")
+bwdset = regsubsets(total_sales_price~.,data=priced_diamonds, nvmax=50, method = "backward")
 
 bwdset.sum = summary(bwdset)
 
-n = dim(some_col)[1]
+n = dim(priced_diamonds)[1]
 p = rowSums(bwdset.sum$which)
 
 brss = bwdset.sum$rss
 bAIC = n*log(brss/n)+2*(p)
 bBIC = n*log(brss/n)+(p)*log(n)
 which.min(bAIC)
-bAIC[28]
+bAIC[27]
 which.min(bBIC)
-bBIC[24]
+bBIC[26]
 which.max(bwdset.sum$adjr2)
-bwdset.sum$adjr2[28]
+bwdset.sum$adjr2[27]
 which.min(bwdset.sum$cp)
-bwdset.sum$cp[28]
+bwdset.sum$cp[27]
 coef(bwdset,24)
 ```
 
@@ -111,20 +442,20 @@ backward selection
 ```{r}
 #### FORWARD SELECTION
 
-fwdset = regsubsets(total_sales_price~.,data=some_col, nvmax=50, method = "forward")
+fwdset = regsubsets(total_sales_price~.,data=priced_diamonds, nvmax=50, method = "forward")
 
 fwdset.sum = summary(fwdset)
 
-n = dim(some_col)[1]
+n = dim(priced_diamonds)[1]
 p = rowSums(fwdset.sum$which)
 
 frss = fwdset.sum$rss
 fAIC = n*log(frss/n)+2*(p)
 fBIC = n*log(frss/n)+(p)*log(n)
 which.min(fAIC)
-fAIC[28]
+fAIC[27]
 which.min(fBIC)
-fBIC[24]
+fBIC[22]
 which.max(fwdset.sum$adjr2)
 fwdset.sum$adjr2[28]
 which.min(fwdset.sum$cp)
@@ -139,16 +470,16 @@ Ridge and lasso
 ```{r}
 ## RIDGE
 
-train = sample(1:nrow(some_col), nrow(some_col)/2)
+train = sample(1:nrow(priced_diamonds), nrow(priced_diamonds)/2)
 test=(-train)
-train_data = some_col[train,]
-test_data = some_col[-train,]
+train_data = priced_diamonds[train,]
+test_data = priced_diamonds[-train,]
 
 grid = 10^seq(10,-2,length=100)
 
-x = model.matrix(total_sales_price ~.,data=some_col)[,-1]
+x = model.matrix(total_sales_price ~.,data=priced_diamonds)[,-1]
 
-Y = some_col$total_sales_price
+Y = priced_diamonds$total_sales_price
 
 ridge.train = glmnet(x[train,],Y[train],alpha=0,lambda=grid)
 lasso.train = glmnet(x[train,],Y[train],alpha=1,lambda=grid)
@@ -173,8 +504,8 @@ bestlambdaridge
 bestlambdalasso
 grid
 which(grid==bestlambdalasso)
-cv.out.lasso$lambda[56]
-coef(lasso.train)[,56]
+cv.out.ridge$lambda[100]
+coef(ridge.train)[,100]
 
 
 ```
