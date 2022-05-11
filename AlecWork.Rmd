@@ -5,15 +5,13 @@ date: '2022-04-18'
 output: html_document
 ---
 
-Split the clarity into two categories
+####Split the clarity into two categories
 ```{r}
 
 diamonds <- read.csv("/Users/alecrmeyer/Downloads/diamonds.csv", header=TRUE)
 
 diamonds$clarity <- as.factor(diamonds$clarity)
 
-#diamonds <- diamonds %>% filter(diamonds$clarity != "VS1")
-#diamonds <- diamonds %>% filter(diamonds$clarity != "VS2")
 
 new.levels<-c('below', 'below', 'below', 'above', 'below', 'below', 'below', 'below', 'above', 'above', 'above')
 clarity <- factor(new.levels[diamonds$clarity])
@@ -23,7 +21,7 @@ diamonds = subset(diamonds,select= -c(clarity, diamond_id, date))
 
 ```
 
-
+### Proportions
 ```{r}
 above <- sum(diamonds$clarityBin == "above")
 
@@ -51,7 +49,7 @@ diamonds = subset(diamonds,select= -c(eye_clean))
 diamonds = subset(diamonds,select= -c(lab))
 diamonds = subset(diamonds,select= -c(fancy_color_dominant_color, fancy_color_secondary_color, fancy_color_overtone, fancy_color_intensity))
 
-diamonds = subset(diamonds, select = c(clarityBin, size, color, cut, total_sales_price, depth_percent, table_percent, meas_length, meas_width, meas_depth))
+diamonds = subset(diamonds, select = c(clarityBin, color, cut, total_sales_price, depth_percent, table_percent, meas_length, meas_width, meas_depth))
 
 
 
@@ -75,6 +73,20 @@ library(randomForest)
 
 library(dplyr)
 
+diamonds <- read.csv("/Users/alecrmeyer/Downloads/diamonds.csv", header=TRUE)
+
+diamonds$clarity <- as.factor(diamonds$clarity)
+
+diamonds <- diamonds %>% filter(diamonds$clarity != "VS1")
+#diamonds <- diamonds %>% filter(diamonds$clarity != "VS2")
+
+new.levels<-c('below', 'below', 'below', 'above', 'below', 'below', 'below', 'below', 'above', 'above', 'above')
+clarity <- factor(new.levels[diamonds$clarity])
+diamonds$clarityBin <- as.factor(clarity)
+
+diamonds = subset(diamonds,select= -c(clarity, diamond_id, date))
+
+
 train = sample(1:nrow(diamonds),nrow(diamonds)/2)
 dim(diamonds)
 
@@ -84,6 +96,97 @@ rf = randomForest(diamonds$clarityBin~.,data=diamonds, subset = train, mtry = 5,
 
 rf.prob = predict(rf, newdata = diamonds[-train,]) 
 
+tab.VS1 <- table(rf.prob, diamonds[-train,]$clarityBin)
+misclass.VS1 <- 1-mean(rf.prob == diamonds[-train,]$clarityBin)
+
+
+
+diamonds <- read.csv("/Users/alecrmeyer/Downloads/diamonds.csv", header=TRUE)
+
+diamonds$clarity <- as.factor(diamonds$clarity)
+
+#diamonds <- diamonds %>% filter(diamonds$clarity != "VS1")
+diamonds <- diamonds %>% filter(diamonds$clarity != "VS2")
+
+new.levels<-c('below', 'below', 'below', 'above', 'below', 'below', 'below', 'below', 'above', 'above', 'above')
+clarity <- factor(new.levels[diamonds$clarity])
+diamonds$clarityBin <- as.factor(clarity)
+
+diamonds = subset(diamonds,select= -c(clarity, diamond_id, date))
+
+
+
+train = sample(1:nrow(diamonds),nrow(diamonds)/2)
+dim(diamonds)
+
+diamonds$clarityBin <- as.factor(diamonds$clarityBin)
+
+rf = randomForest(diamonds$clarityBin~.,data=diamonds, subset = train, mtry = 5, importance = TRUE, ntree=500)
+
+rf.prob = predict(rf, newdata = diamonds[-train,]) 
+
+tab.VS2 <- table(rf.prob, diamonds[-train,]$clarityBin)
+misclass.VS2 <- 1-mean(rf.prob == diamonds[-train,]$clarityBin)
+
+
+
+diamonds <- read.csv("/Users/alecrmeyer/Downloads/diamonds.csv", header=TRUE)
+
+diamonds$clarity <- as.factor(diamonds$clarity)
+
+diamonds <- diamonds %>% filter(diamonds$clarity != "VS1")
+diamonds <- diamonds %>% filter(diamonds$clarity != "VS2")
+
+new.levels<-c('below', 'below', 'below', 'above', 'below', 'below', 'below', 'below', 'above', 'above', 'above')
+clarity <- factor(new.levels[diamonds$clarity])
+diamonds$clarityBin <- as.factor(clarity)
+
+diamonds = subset(diamonds,select= -c(clarity, diamond_id, date))
+
+
+
+train = sample(1:nrow(diamonds),nrow(diamonds)/2)
+dim(diamonds)
+
+diamonds$clarityBin <- as.factor(diamonds$clarityBin)
+
+rf = randomForest(diamonds$clarityBin~.,data=diamonds, subset = train, mtry = 5, importance = TRUE, ntree=500)
+
+rf.prob = predict(rf, newdata = diamonds[-train,]) 
+
+tab.both <- table(rf.prob, diamonds[-train,]$clarityBin)
+misclass.both <- 1-mean(rf.prob == diamonds[-train,]$clarityBin)
+```
+
+```{r}
+train = sample(1:nrow(diamonds),nrow(diamonds)/2)
+dim(diamonds)
+
+diamonds$clarityBin <- as.factor(diamonds$clarityBin)
+
+rf = randomForest(diamonds$clarityBin~.,data=diamonds, subset = train, mtry = 5, importance = TRUE, ntree=500)
+
+rf.prob = predict(rf, newdata = diamonds[-train,]) 
+
+tab <- table(rf.prob, diamonds[-train,]$clarityBin)
+misclass <- 1-mean(rf.prob == diamonds[-train,]$clarityBin)
+```
+
+Importance random forest
+```{r}
+diamonds = subset(diamonds, select = c(clarityBin, color, total_sales_price, depth_percent, table_percent, meas_length, meas_width, meas_depth, size))
+
+train = sample(1:nrow(diamonds),nrow(diamonds)/2)
+dim(diamonds)
+
+diamonds$clarityBin <- as.factor(diamonds$clarityBin)
+
+rf = randomForest(diamonds$clarityBin~.,data=diamonds, subset = train, mtry = 3, importance = TRUE, ntree=500)
+
+rf.prob = predict(rf, newdata = diamonds[-train,]) 
+
+tab <- table(rf.prob, diamonds[-train,]$clarityBin)
+misclass <- 1-mean(rf.prob == diamonds[-train,]$clarityBin)
 ```
 
 ```{r}
@@ -100,11 +203,54 @@ x <- qnorm(1-exp(-1/mean(diamonds$total_sales_price)*diamonds$total_sales_price)
 
 ```
 
+knn CV
+```{r}
+
+train = sample(1:nrow(diamonds),nrow(diamonds)/2)
+
+standardized.X = scale(diamonds[,-1])
+training.y = diamonds$clarityBin[train]
+training.x = standardized.X[train,] 
+
+flds = createFolds(training.y, k = 10, list = TRUE, returnTrain = FALSE)
+
+K = c(1, 3, 5, 7, 9, 11, 13)
+
+cv_error = matrix(NA, 3, 7)
+
+for(j in 1:7) {
+  k = K[j]
+  for(i in 1:3) {
+    test_index = flds[[1]]
+    testX = training.x[test_index, ]
+    trainX = training.x[-test_index, ]
+    
+    trainY = training.y[-test_index]
+    testY = training.y[test_index]
+    
+    knn.pred = knn(trainX, testX, trainY, k = k)
+    cv_error[i, j] = mean(testY != knn.pred)
+  }
+}
+
+apply(cv_error, 2, mean)
+
+
+```
+
+```{r}
+mean_error <- apply(cv_error, 2, mean)
+p <- cbind(K, mean_error)
+plot(p)
+```
+
 KNN
 ```{r}
 library(class)
 library(caret)
 train = sample(1:nrow(diamonds),nrow(diamonds)/2)
+
+standardized.X = scale(diamonds[,-1])
 
 
 training.y = diamonds$clarityBin[train]
@@ -114,4 +260,7 @@ testing.y = diamonds$clarityBin[-train]
 
 knn.pred = knn(training.x, testing.x, training.y, k = 3)
 table(knn.pred, testing.y)
+
+misclass <- mean(testing.y != knn.pred)
+
 ```
